@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "blackwell-coordinator": {
+      "command": "C:\Users\Sirena Tech\Documents\BlackwellCoordinator\.venv\Scripts\python.exe",
+      "args": ["-m", "blackwell_mcp.server"],
+      "env": {
+        "BLACKWELL_COORDINATOR_URL": "http://127.0.0.1:9477",
+        "BLACKWELL_OLLAMA_MODEL": "qwen2.5:7b",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# Open-Jev decision server for BlackwellCoordinator (same image/weights as the m3 jev-router).
+# Weights live in the shared `agentos_jev_models` volume, so nothing is re-downloaded if m3 already pulled them.
+#   docker compose -f jev-router/compose.yml up -d          # 2B (~6 GB VRAM), default
+#   $env:JEV_CHECKPOINT="9b"; docker compose -f jev-router/compose.yml up -d   # 9B (~20 GB VRAM)
+# The coordinator reads JEV_URL (default http://127.0.0.1:8791) and falls back to Ollama/rules when it is down.
+services:
+  jev:
+    build: .
+    container_name: blackwell-jev
+    restart: unless-stopped
+    environment:
+      JEV_CHECKPOINT: "${JEV_CHECKPOINT:-2b}"
+      JEV_MAX_LENGTH: "${JEV_MAX_LENGTH:-4096}"
+      JEV_BATCH_SIZE: "${JEV_BATCH_SIZE:-8}"
+    ports:
+      - "127.0.0.1:8791:8791"
+    volumes:
+      - jev_models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  jev_models:
+    name: agentos_jev_models

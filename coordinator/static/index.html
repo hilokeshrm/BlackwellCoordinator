@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blackwell Coordinator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23171F33'/><path d='M4 22 L10 22 L13 9 L18 25 L21 15 L28 15' fill='none' stroke='%235CE1E6' stroke-width='2.6' stroke-linejoin='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/static/styles.css?v=12">
+</head>
+<body>
+  <div class="haze" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="#overview">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 22 L10 22 L13 8 L18 26 L21 15 L29 15"/></svg>
+        <span><strong>Blackwell Coordinator</strong><small id="gpuName">Connecting…</small></span>
+      </a>
+      <nav class="sections" aria-label="Sections">
+        <span class="nav-ind" id="navInd" aria-hidden="true"></span>
+        <a href="#overview" class="on">Overview</a>
+        <a href="#gpu-now">On the GPU <b id="navProcs"></b></a>
+        <a href="#services">Services <b id="navSvc"></b></a>
+        <a href="#jobs">Training jobs <b id="navJobs"></b></a>
+        <a href="#activity">Activity</a>
+      </nav>
+      <div class="top-stats">
+        <span class="pill" id="connPill"><i></i><span>Offline</span></span>
+        <span class="pill" id="dayPill"><span id="dayText">—</span></span>
+        <button class="lock" id="lockBtn" title="Admin logs (locked)" aria-label="Open admin logs">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <span>Logs</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="overview" class="overview" aria-label="GPU overview">
+      <div class="panel scope rise" style="--d:0">
+        <div class="scope-head">
+          <div class="readout">
+            <div class="gauge">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="thermalArc" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0" stop-color="#2DD4BF"/><stop offset=".45" stop-color="#FFC34D"/>
+                    <stop offset=".75" stop-color="#FF7A3D"/><stop offset="1" stop-color="#FF4D6D"/>
+                  </linearGradient>
+                </defs>
+                <path class="g-track" d="M 25.4 94.6 A 49 49 0 1 1 94.6 94.6"/>
+                <path class="g-val" id="gaugeArc" d="M 25.4 94.6 A 49 49 0 1 1 94.6 94.6" pathLength="100"/>
+                <line class="g-thr" id="gaugeThr" x1="0" y1="0" x2="0" y2="0"/>
+              </svg>
+              <div class="g-num"><span class="big" id="utilBig">0</span><span class="unit">%</span></div>
+            </div>
+            <div class="readout-meta">
+              <span class="rm-title">GPU utilisation</span>
+              <span class="eff" id="utilEff"></span>
+              <span class="heat" id="heatWord"></span>
+            </div>
+          </div>
+          <div class="ranges" role="tablist" aria-label="Graph range">
+            <button data-min="5">5m</button><button data-min="30" class="on">30m</button><button data-min="120">2h</button><button data-min="1440">24h</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="chart" preserveAspectRatio="none" role="img" aria-label="GPU utilisation over time"></svg>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <div class="legend">
+          <span><i class="sw sw-util"></i>GPU</span>
+          <label><input type="checkbox" id="vramToggle" checked><i class="sw sw-vram"></i>VRAM</label>
+          <span><i class="sw sw-thr"></i>Jobs auto-start below <b id="thrVal">25</b>%</span>
+        </div>
+        <dl class="mini">
+          <div><dt>Temperature</dt><dd><span id="temp">--</span><small>°C</small></dd></div>
+          <div><dt>Power</dt><dd><span id="power">--</span><small>W</small></dd></div>
+          <div><dt>Queued jobs</dt><dd><span id="qCount">0</span><small id="qNext"></small></dd></div>
+          <div><dt>Decisions</dt><dd class="jev" id="jevStatus">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="side">
+        <div class="panel gate rise" id="gate" style="--d:2">
+          <div class="gate-kicker">Can a job start?</div>
+          <div class="gate-state" id="gateState">—</div>
+          <p class="gate-why" id="gateWhy"></p>
+          <div class="gate-bar"><div id="gateFill"></div></div>
+          <p class="decision" id="decision" hidden></p>
+        </div>
+        <div class="panel vram rise" style="--d:3">
+          <div class="vram-head">
+            <h2>GPU memory</h2>
+            <span class="vram-total"><b id="vramUsed">--</b> / <span id="vramTot">--</span> GB</span>
+          </div>
+          <div class="vram-bar" id="vramBar" role="img" aria-label="GPU memory by owner"></div>
+          <ul class="vram-legend" id="vramLegend"></ul>
+          <p class="fit" id="vramFit"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="gpu-now" class="block rise" style="--d:4" aria-label="Processes on the GPU">
+      <div class="sec-head">
+        <h2>On the GPU right now</h2>
+        <p>Every process holding GPU memory, grouped by who it belongs to.</p>
+      </div>
+      <div class="panel table-wrap">
+        <table class="procs">
+          <thead><tr><th>Process</th><th>Belongs to</th><th class="num">Memory</th><th class="num">GPU</th></tr></thead>
+          <tbody id="procRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="services" class="block rise" style="--d:5" aria-label="Deployed services">
+      <div class="sec-head">
+        <h2>Deployed services</h2>
+        <p>Always-on apps. Health-checked every 20 s; their memory is kept free for them if they go down.</p>
+      </div>
+      <div class="svc-grid" id="svcGrid"></div>
+    </section>
+
+    <section id="jobs" class="block rise" style="--d:6" aria-label="Training jobs">
+      <div class="sec-head">
+        <h2>Training jobs</h2>
+        <p id="planNote">Short jobs fill daytime gaps; long runs take the night.</p>
+      </div>
+      <div class="panel timeline" id="timeline"></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="activity" class="block rise" style="--d:7" aria-label="Coordinator activity">
+      <div class="sec-head"><h2>Activity</h2><p>What the coordinator decided and why.</p></div>
+      <ol class="panel feed" id="feed"></ol>
+    </section>
+  </main>
+
+  <dialog id="schedDlg">
+    <form method="dialog" id="schedForm">
+      <h3>Schedule <span id="schedName"></span></h3>
+      <fieldset class="when">
+        <legend>When</legend>
+        <label><input type="radio" name="when" value="auto" checked><span><b>When the GPU is free</b><small>Starts automatically once usage stays under the threshold. Short jobs get fitted into gaps.</small></span></label>
+        <label><input type="radio" name="when" value="tonight"><span><b>Tonight</b><small id="tonightLbl">22:00</small></span></label>
+        <label><input type="radio" name="when" value="morning"><span><b>Tomorrow morning</b><small>07:00</small></span></label>
+        <label><input type="radio" name="when" value="custom"><span><b>Pick a time</b><input type="datetime-local" id="schedAt"></span></label>
+      </fieldset>
+      <div class="row2">
+        <label>Priority
+          <select id="schedPri"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option></select>
+        </label>
+        <label>Window
+          <select id="schedWin"><option value="anytime">Any time</option><option value="night_only">Night only</option><option value="daytime_only">Daytime only</option></select>
+        </label>
+      </div>
+      <p class="preview" id="schedPreview"></p>
+      <div class="dlg-actions">
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button value="ok" class="primary">Add to schedule</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="loginDlg">
+    <form method="dialog" id="loginForm">
+      <h3>Admin logs</h3>
+      <p class="muted">Enter the admin password to see every run's logs.</p>
+      <input type="password" id="pw" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <p class="err" id="pwErr" hidden>Wrong password. Try again.</p>
+      <div class="dlg-actions">
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button value="ok" class="primary">Unlock</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="admin" id="admin" hidden>
+    <div class="admin-bar">
+      <h3>Logs</h3>
+      <select id="fProj" aria-label="Project"><option value="">All projects</option></select>
+      <select id="fLvl" aria-label="Level"><option value="">All levels</option><option>INFO</option><option>WARNING</option><option>ERROR</option></select>
+      <input id="fSearch" placeholder="Search messages" aria-label="Search">
+      <label class="chk"><input type="checkbox" id="fFollow" checked> Follow</label>
+      <label class="chk"><input type="checkbox" id="fRaw"> Raw JSON</label>
+      <button class="ghost" id="exportCsv">Export CSV</button>
+      <button class="ghost" id="adminRuns">Runs</button>
+      <button class="primary" id="adminClose">Lock</button>
+    </div>
+    <div class="admin-body">
+      <table class="logs"><tbody id="logRows"></tbody></table>
+      <div class="runs" id="runsPane" hidden></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/static/app.js?v=12"></script>
+</body>
+</html>

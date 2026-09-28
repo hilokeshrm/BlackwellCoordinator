@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.playwright-mcp/
+.playwright-mcp/**
+.remember/
+# BlackwellCoordinator runtime state inside projects
+.blackwell/checkpoints/
+.blackwell/logs/
+.blackwell/STOP
+.blackwell/*.tmp
